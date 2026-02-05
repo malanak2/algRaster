@@ -39,7 +39,7 @@ public class TrivialRasterizer implements Rasterizer {
                     if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
                         continue;
                     }
-                    raster.setPixel(x, y, defaultColor.getRGB());
+                    raster.setPixel(x, y, line.getColor().getRGB());
                 }
 
             } else {
@@ -51,7 +51,7 @@ public class TrivialRasterizer implements Rasterizer {
                     if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
                         continue;
                     }
-                    raster.setPixel(x, y, defaultColor.getRGB());
+                    raster.setPixel(x, y, line.getColor().getRGB());
                 }
             }
         } else {
@@ -64,7 +64,7 @@ public class TrivialRasterizer implements Rasterizer {
                     if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
                         continue;
                     }
-                    raster.setPixel(x, y, defaultColor.getRGB());
+                    raster.setPixel(x, y, line.getColor().getRGB());
                 }
             } else {
                 for (int y = line.getPointA().getY(); y >= line.getPointB().getY(); y -= stepamount) {
@@ -75,7 +75,7 @@ public class TrivialRasterizer implements Rasterizer {
                     if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
                         continue;
                     }
-                    raster.setPixel(x, y, defaultColor.getRGB());
+                    raster.setPixel(x, y, line.getColor().getRGB());
                 }
             }
         }
