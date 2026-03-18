@@ -21,11 +21,30 @@ public class Point {
     }
 
     private int x;
-    public int y;
+    private int y;
     public Point(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
+    public double distanceTo(Point other) {
+        double xDiff = this.x - other.getX();
+        double yDiff = this.y - other.getY();
 
+        return Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Point point = (Point) o;
+        return x == point.x && y == point.y;
+    }
+
+    @Override
+    public int hashCode() {
+        // Using Objects.hash is the standard, reliable way to do this
+        return java.util.Objects.hash(x, y);
+    }
 }

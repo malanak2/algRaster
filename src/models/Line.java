@@ -7,7 +7,11 @@ public class Line {
     private Point pointB;
     private Color color;
     private boolean dotted;
+    private int width;
 
+    public int getWidth() {
+        return width;
+    }
 
     public void setDotted(boolean dotted) {
         this.dotted = dotted;
@@ -17,11 +21,12 @@ public class Line {
         return dotted;
     }
 
-    public Line(Point pointA, Point pointB, Color color, boolean dotted) {
+    public Line(Point pointA, Point pointB, Color color, boolean dotted, int width) {
         this.pointA = pointA;
         this.pointB = pointB;
         this.color = color;
         this.dotted = dotted;
+        this.width = width;
     }
 
     private void calculatePoints() {

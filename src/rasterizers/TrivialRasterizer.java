@@ -10,8 +10,7 @@ public class TrivialRasterizer implements Rasterizer {
 
     private Color defaultColor;
     private Raster raster;
-
-    public TrivialRasterizer(Raster raster, Color defaultColor) {
+    public TrivialRasterizer(Raster raster, Color defaultColor, int width) {
         this.raster = raster;
         this.defaultColor = defaultColor;
     }
@@ -39,7 +38,7 @@ public class TrivialRasterizer implements Rasterizer {
                     if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
                         continue;
                     }
-                    raster.setPixel(x, y, line.getColor().getRGB());
+                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
                 }
 
             } else {
@@ -51,7 +50,7 @@ public class TrivialRasterizer implements Rasterizer {
                     if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
                         continue;
                     }
-                    raster.setPixel(x, y, line.getColor().getRGB());
+                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
                 }
             }
         } else {
@@ -64,7 +63,7 @@ public class TrivialRasterizer implements Rasterizer {
                     if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
                         continue;
                     }
-                    raster.setPixel(x, y, line.getColor().getRGB());
+                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
                 }
             } else {
                 for (int y = line.getPointA().getY(); y >= line.getPointB().getY(); y -= stepamount) {
@@ -75,9 +74,68 @@ public class TrivialRasterizer implements Rasterizer {
                     if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
                         continue;
                     }
-                    raster.setPixel(x, y, line.getColor().getRGB());
+                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
+                }
+            }
+        }
+
+    }
+    @Override
+    public void rasterize(models.Polygon poly) {
+        if (poly.isFilled) {
+            for (models.Point p : poly.GetAllInsidePoints()) {
+                drawPixel(p.getX(), p.getY(), poly.GetColor().getRGB(), 1);
+            }
+        }
+    }
+
+    @Override
+    public void rasterize(models.Circle circle) {
+        int x0 = circle.getOrigin().getX();
+        int y0 = circle.getOrigin().getY();
+        int radius = Math.round(circle.getRadius());
+        int rgb = circle.getColor().getRGB();
+
+        int x = radius;
+        int y = 0;
+        int decisionOver2 = 1 - x;
+
+        while (x >= y) {
+            drawSymmetricPoints(raster, x0, y0, x, y, rgb, circle.getWidth());
+
+            y++;
+            if (decisionOver2 <= 0) {
+                decisionOver2 += 2 * y + 1;
+            } else {
+                x--;
+                decisionOver2 += 2 * (y - x) + 1;
+            }
+        }
+        if (circle.isFilled) {
+            for (models.Point p : circle.getInsidePoints()) {
+                drawPixel(p.getX(), p.getY(), circle.getColor().getRGB(), 1);
+            }
+        }
+
+    }
+    private void drawSymmetricPoints(Raster raster, int x0, int y0, int x, int y, int rgb, int width) {
+        drawPixel(x0 + x, y0 + y, rgb, width);
+        drawPixel(x0 + y, y0 + x, rgb, width);
+        drawPixel(x0 - y, y0 + x, rgb, width);
+        drawPixel(x0 - x, y0 + y, rgb, width);
+        drawPixel(x0 - x, y0 - y, rgb, width);
+        drawPixel(x0 - y, y0 - x, rgb, width);
+        drawPixel(x0 + y, y0 - x, rgb, width);
+        drawPixel(x0 + x, y0 - y, rgb, width);
+    }
+    private void drawPixel(int x, int y, int rgb, int width) {
+        int offset = width / 2;
+        for (int ix = x - offset; ix < x - offset + width; ix++) {
+            for (int iy = y - offset; iy < y - offset + width; iy++) {
+                if (ix >= 0 && ix < raster.getWidth() && iy >= 0 && iy < raster.getHeight()) {raster.setPixel(ix, iy, rgb);
                 }
             }
         }
     }
 }
+
