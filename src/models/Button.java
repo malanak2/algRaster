@@ -7,6 +7,9 @@ public class Button extends Shape{
     public Function onClick;
     private Color col1;
     private Color col2;
+    public int getWidth() {
+        return width;
+    }
     public Button(ArrayList<Point> points, Color c, Color c2, boolean isFilled, float size, Point origin, Function f) {
         super(points, c, isFilled, size, origin, 1);
         onClick = f;
@@ -26,6 +29,12 @@ public class Button extends Shape{
 
     public Button(ArrayList<Point> points, Color c, boolean isFilled, float size, Point origin, Function f) {
         super(points, c, isFilled, size, origin, 1);
+        onClick = f;
+        col1 = c;
+        col2 = c;
+    }
+    public Button(ArrayList<Point> points, Color c, boolean isFilled, float size, Point origin, int width, Function f) {
+        super(points, c, isFilled, size, origin, width);
         onClick = f;
         col1 = c;
         col2 = c;

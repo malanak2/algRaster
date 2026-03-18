@@ -13,11 +13,11 @@ Možnost vykreslování následujících objektů:
 
 ### 3. Úpravy tvarů
 - [ ] **Změna rozměrů:** Úprava velikosti a tvaru tažením myší.
-- [ ] **Manipulace:** Přesouvání objektů po ploše plátna.
+- [x] **Manipulace:** Přesouvání objektů po ploše plátna.
 
 ### 4. Další nástroje
 - [ ] **Guma:** Nástroj pro mazání obsahu.
-- [ ] **Výplň:** Možnost vyplnění uzavřených objektů a oblastí barvou.
+- [x] **Výplň:** Možnost vyplnění uzavřených objektů a oblastí barvou.
 - [x] **Delete:** Vymazání celého plátna.
 
 ### 5. Uživatelské rozhraní (UI)

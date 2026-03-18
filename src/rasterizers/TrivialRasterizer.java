@@ -21,7 +21,8 @@ public class TrivialRasterizer implements Rasterizer {
     }
 
     @Override
-    public void rasterize(Line line) {
+    public ArrayList<models.Point> rasterize(Line line) {
+        ArrayList<models.Point> ret = new ArrayList<>();
         double k = (line.getPointB().getY() - line.getPointA().getY()) / (double) (line.getPointB().getX() - line.getPointA().getX());
         double q = line.getPointA().getY() - k * line.getPointA().getX();
         boolean staticX = line.getPointA().getX() == line.getPointB().getX();
@@ -35,10 +36,14 @@ public class TrivialRasterizer implements Rasterizer {
                     if (staticY) {
                         y = line.getPointA().getY();
                     }
-                    if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
+                    // Apply transformation
+                    int newX = x + line.origin.getX();
+                    int newY = y + line.origin.getY();
+                    if (newX >= raster.getWidth() || newY >= raster.getHeight() || newX < 0 || newY < 0) {
                         continue;
                     }
-                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
+                    ret.add(new models.Point(newX,newY));
+                    drawPixel(newX, newY, line.getColor().getRGB(), line.getWidth());
                 }
 
             } else {
@@ -47,10 +52,18 @@ public class TrivialRasterizer implements Rasterizer {
                     if (staticY) {
                         y = line.getPointA().getY();
                     }
-                    if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
+                    int newX = x + line.origin.getX();
+                    int newY = y + line.origin.getY();
+                    if (newX >= raster.getWidth() || newY >= raster.getHeight() || newX < 0 || newY < 0) {
                         continue;
                     }
-                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
+                    ret.add(new models.Point(newX,newY));
+                    drawPixel(newX, newY, line.getColor().getRGB(), line.getWidth());
+//                    if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
+//                        continue;
+//                    }
+//                    ret.add(new models.Point(x,y));
+//                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
                 }
             }
         } else {
@@ -60,10 +73,19 @@ public class TrivialRasterizer implements Rasterizer {
                     if (staticX) {
                         x = line.getPointA().getX();
                     }
-                    if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
+                    int newX = x + line.origin.getX();
+                    int newY = y + line.origin.getY();
+                    if (newX >= raster.getWidth() || newY >= raster.getHeight() || newX < 0 || newY < 0) {
                         continue;
                     }
-                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
+                    ret.add(new models.Point(newX,newY));
+                    drawPixel(newX, newY, line.getColor().getRGB(), line.getWidth());
+//                    if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
+//                        continue;
+//                    }
+//                    ret.add(new models.Point(x,y));
+//
+//                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
                 }
             } else {
                 for (int y = line.getPointA().getY(); y >= line.getPointB().getY(); y -= stepamount) {
@@ -71,17 +93,26 @@ public class TrivialRasterizer implements Rasterizer {
                     if (staticX) {
                         x = line.getPointA().getX();
                     }
-                    if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
+                    int newX = x + line.origin.getX();
+                    int newY = y + line.origin.getY();
+                    if (newX >= raster.getWidth() || newY >= raster.getHeight() || newX < 0 || newY < 0) {
                         continue;
                     }
-                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
+                    ret.add(new models.Point(newX,newY));
+                    drawPixel(newX, newY, line.getColor().getRGB(), line.getWidth());
+//                    if (x >= raster.getWidth() || y >= raster.getHeight() || x < 0 || y < 0) {
+//                        continue;
+//                    }
+//                    ret.add(new models.Point(x,y));
+//                    drawPixel(x, y, line.getColor().getRGB(), line.getWidth());
                 }
             }
         }
-
+        return ret;
     }
     @Override
     public void rasterize(models.Polygon poly) {
+
         if (poly.isFilled) {
             for (models.Point p : poly.GetAllInsidePoints()) {
                 drawPixel(p.getX(), p.getY(), poly.GetColor().getRGB(), 1);
@@ -90,7 +121,8 @@ public class TrivialRasterizer implements Rasterizer {
     }
 
     @Override
-    public void rasterize(models.Circle circle) {
+    public ArrayList<models.Point> rasterize(models.Circle circle) {
+        ArrayList<models.Point> ret = new ArrayList<>();
         int x0 = circle.getOrigin().getX();
         int y0 = circle.getOrigin().getY();
         int radius = Math.round(circle.getRadius());
@@ -101,7 +133,7 @@ public class TrivialRasterizer implements Rasterizer {
         int decisionOver2 = 1 - x;
 
         while (x >= y) {
-            drawSymmetricPoints(raster, x0, y0, x, y, rgb, circle.getWidth());
+            ret = drawSymmetricPoints(ret, x0, y0, x, y, rgb, circle.GetWidth());
 
             y++;
             if (decisionOver2 <= 0) {
@@ -116,17 +148,26 @@ public class TrivialRasterizer implements Rasterizer {
                 drawPixel(p.getX(), p.getY(), circle.getColor().getRGB(), 1);
             }
         }
-
+        return ret;
     }
-    private void drawSymmetricPoints(Raster raster, int x0, int y0, int x, int y, int rgb, int width) {
+    private ArrayList<models.Point> drawSymmetricPoints(ArrayList<models.Point> ret, int x0, int y0, int x, int y, int rgb, int width) {
         drawPixel(x0 + x, y0 + y, rgb, width);
+        ret.add(new models.Point(x0 + x,y0 + y));
         drawPixel(x0 + y, y0 + x, rgb, width);
+        ret.add(new models.Point(x0 + y,y0 + x));
         drawPixel(x0 - y, y0 + x, rgb, width);
+        ret.add(new models.Point(x0 - y,y0 + x));
         drawPixel(x0 - x, y0 + y, rgb, width);
+        ret.add(new models.Point(x0 - x,y0 + y));
         drawPixel(x0 - x, y0 - y, rgb, width);
+        ret.add(new models.Point(x0 - x,y0 - y));
         drawPixel(x0 - y, y0 - x, rgb, width);
+        ret.add(new models.Point(x0 - y,y0 - x));
         drawPixel(x0 + y, y0 - x, rgb, width);
+        ret.add(new models.Point(x0 + y,y0 - x));
         drawPixel(x0 + x, y0 - y, rgb, width);
+        ret.add(new models.Point(x0 + x,y0 - y));
+        return ret;
     }
     private void drawPixel(int x, int y, int rgb, int width) {
         int offset = width / 2;

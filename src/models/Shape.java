@@ -3,9 +3,8 @@ package models;
 import java.awt.*;
 import java.util.ArrayList;
 
-public class Shape extends Polygon implements Cloneable {
+public class Shape extends Polygon implements Cloneable, IChangeOrigin {
     private float size;
-    private models.Point origin;
     public Shape(ArrayList<models.Point> points, Color c, boolean isFilled, float size, models.Point origin, int width) {
         super(c, isFilled, width);
 
@@ -16,6 +15,19 @@ public class Shape extends Polygon implements Cloneable {
         }
         this.Finish();
     }
+
+    @Override
+    public void SetSize(int i) {
+        size = i;
+        System.out.println("Shape update size" + i);
+        RebuildLines();
+    }
+
+    @Override
+    public int GetSize() {
+        return (int) size;
+    }
+
     @Override
     public ArrayList<models.Point> GetPoints() {
 
@@ -43,6 +55,7 @@ public class Shape extends Polygon implements Cloneable {
         }
         lines.add(new Line(points.getFirst(), points.getLast(), color, !isFinished, width));
     };
+    @Override
     public void SetOrigin(models.Point p) {
         this.origin = p;
         RebuildLines();
@@ -50,10 +63,13 @@ public class Shape extends Polygon implements Cloneable {
     public void SetSize(float f) {
         this.size = f;
         RebuildLines();
-        rebuildInsidePoints();
+        calculateInsidePoints();
     }
 
-
+    @Override
+    public Point GetOrigin() {
+        return origin;
+    }
 
     @Override
     public Shape clone() {

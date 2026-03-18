@@ -1,14 +1,17 @@
 package models;
 
 import java.awt.*;
+import java.util.ArrayList;
 
-public class Line {
+public class Line implements IChangeOrigin{
     private Point pointA;
     private Point pointB;
     private Color color;
     private boolean dotted;
     private int width;
+    public models.Point origin;
 
+    public ArrayList<Point> pointsBorder;
     public int getWidth() {
         return width;
     }
@@ -27,6 +30,8 @@ public class Line {
         this.color = color;
         this.dotted = dotted;
         this.width = width;
+        this.origin = new models.Point(0,0);
+        this.pointsBorder = new ArrayList<>();
     }
 
     private void calculatePoints() {
@@ -55,5 +60,29 @@ public class Line {
 
     public Color getColor() {
         return color;
+    }
+
+    @Override
+    public void SetOrigin(Point p) {
+        origin = p;
+    }
+
+    @Override
+    public Point GetOrigin() {
+        return origin;
+    }
+
+    @Override
+    public void SetSize(int i) {
+
+    }
+
+    @Override
+    public int GetSize() {
+        return 0;
+    }
+
+    @Override
+    public void calculateInsidePoints() {
     }
 }

@@ -3,7 +3,7 @@ package models;
 import java.awt.*;
 import java.util.ArrayList;
 
-public class Circle {
+public class Circle implements IChangeOrigin{
     private Point origin;
     private float radius;
     private Color color;
@@ -11,14 +11,24 @@ public class Circle {
     public boolean isFilled;
 
     private int width;
-    public void setWidth(int width) {
+    public void SetWidth(int width) {
         this.width = width;
     }
-
-    public int getWidth() {
+    public int GetWidth() {
         return width;
     }
 
+    @Override
+    public void SetSize(int i) {
+        setRadius(i);
+    }
+
+    @Override
+    public int GetSize() {
+        return Math.round(getRadius());
+    }
+
+    public ArrayList<models.Point> pointsBorder;
 
     public float getRadius() {
         return radius;
@@ -31,17 +41,20 @@ public class Circle {
     public Color getColor() {
         return color;
     }
-
-    public Circle(Point origin, float radius, Color color, boolean isFilled, int width) {
+    public Function onClick;
+    public Circle(Point origin, float radius, Color color, boolean isFilled, int width, Function f) {
         this.origin = origin;
         this.radius = radius;
         this.color = color;
         this.insidePoints = new ArrayList<>();
         this.isFilled = isFilled;
         this.width = width;
+        this.onClick = f;
+        this.pointsBorder = new ArrayList<>();
         calculateInsidePoints();
     }
 
+    @Override
     public void calculateInsidePoints() {
         this.insidePoints.clear();
 
@@ -69,8 +82,13 @@ public class Circle {
         calculateInsidePoints();
     }
 
-    public void setOrigin(Point origin) {
-        this.origin = origin;
-        calculateInsidePoints();
+    @Override
+    public void SetOrigin(Point p) {
+        this.origin = p;
+    }
+
+    @Override
+    public Point GetOrigin() {
+        return origin;
     }
 }

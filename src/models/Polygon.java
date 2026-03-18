@@ -1,11 +1,9 @@
 package models;
 
-import org.w3c.dom.css.ElementCSSInlineStyle;
-
 import java.awt.*;
 import java.util.ArrayList;
 
-public class Polygon {
+public class Polygon implements IChangeOrigin {
     protected ArrayList<Point> points;
 
     protected ArrayList<Line> lines;
@@ -14,9 +12,30 @@ public class Polygon {
 
     public boolean isFilled;
 
-    public void setWidth(int width) {
+    protected models.Point origin;
+
+    public ArrayList<models.Point> pointsBorder;
+
+    public void SetWidth(int width) {
         this.width = width;
         RebuildLines();
+    }
+
+    public int GetWidth() {
+        return width;
+    }
+    public int size;
+    @Override
+    public void SetSize(int i) {
+        size = i;
+        System.out.println("Poly update size" + i);
+        RebuildLines();
+    }
+
+    @Override
+    public int GetSize() {
+
+        return size;
     }
 
     protected int width;
@@ -28,17 +47,28 @@ public class Polygon {
         this.isFilled = isFilled;
         points = new ArrayList<>();
         this.width = width;
-        rebuildInsidePoints();
+        this.origin = new models.Point(0,0);
+        this.pointsBorder = new ArrayList<>();
+        this.size = 1;
+        calculateInsidePoints();
     }
 
     public void AddPoint(Point p) {
         points.add(p);
         this.RebuildLines();
-        this.rebuildInsidePoints();
+        this.calculateInsidePoints();
     }
 
     public ArrayList<Point> GetPoints() {
-        return points;
+
+        ArrayList<models.Point> transformedPoints = new ArrayList<>();
+
+        for (models.Point p : this.points) {
+            int newX = Math.round(p.getX() * size) + origin.getX();
+            int newY = Math.round(p.getY() * size) + origin.getY();
+            transformedPoints.add(new models.Point(newX, newY));
+        }
+        return transformedPoints;
     }
 
     protected void RebuildLines() {
@@ -73,7 +103,8 @@ public class Polygon {
     public ArrayList<models.Point> GetAllInsidePoints() {
         return insidePoints;
     }
-    protected void rebuildInsidePoints() {
+    @Override
+    public void calculateInsidePoints() {
         ArrayList<models.Point> points = this.GetPoints();
         ArrayList<models.Point> ret = new ArrayList<>();
         if (points.isEmpty()) return;
@@ -121,5 +152,15 @@ public class Polygon {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void SetOrigin(Point p) {
+        origin = p;
+    }
+
+    @Override
+    public Point GetOrigin() {
+        return origin;
     }
 }

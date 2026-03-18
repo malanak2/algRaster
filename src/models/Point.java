@@ -47,4 +47,15 @@ public class Point {
         // Using Objects.hash is the standard, reliable way to do this
         return java.util.Objects.hash(x, y);
     }
+    public Point Add(Point other) {
+        other.setX(other.getX() + x);
+        other.setY(other.getY() + y);
+        return other;
+    }
+    public Point Sub(Point other) {
+        other.setX(other.getX() - x);
+        other.setY(other.getY() - y);
+        return other;
+    }
+
 }

@@ -1,8 +1,6 @@
-import models.Circle;
-import models.Line;
+import models.*;
+import models.Button;
 import models.Point;
-import models.Polygon;
-import models.Shape;
 import rasterizers.Rasterizer;
 import rasterizers.TrivialRasterizer;
 import rasters.Raster;
@@ -14,10 +12,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.PixelInterleavedSampleModel;
 import java.io.Serial;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.List;
 
 public class App {
@@ -51,10 +47,10 @@ public class App {
                 new Point(0, 80)
         ));
         public static ArrayList<models.Point> SQUARE = new ArrayList<>(List.of(
-                new Point(0, 0),
-                new Point(1, 0),
+                new Point(-1, -1),
+                new Point(1, -1),
                 new Point(1, 1),
-                new Point(0, 1)
+                new Point(-1, 1)
         ));
     }
 
@@ -66,14 +62,13 @@ public class App {
     private models.Point helperP2;
 
     private final ArrayList<Line> finished_lines = new ArrayList<>();
-    private final ArrayList<Polygon> finished_polygons = new ArrayList<>();
-    private final ArrayList<models.Shape> finished_shapes = new ArrayList<>();
+    private final ArrayList<models.Button> finished_shapes = new ArrayList<>();
     private final ArrayList<models.Circle> finished_circles = new ArrayList<>();
 
     private boolean dottedMode = false;
     private boolean shiftMode = false;
     private DrawType DrawMode = DrawType.Normal;
-    private models.Polygon currentPoly = null;
+    private models.Button currentPoly = null;
     private models.Circle currentCircle = null;
     private boolean fillMode = false;
     private Color currentColor = Color.RED;
@@ -176,7 +171,9 @@ public class App {
         )
     );
 
-    private models.Circle uiCircle = new Circle(new models.Point(310, 50), 30, Color.BLACK, false, currwidth.ordinal()+1);
+    private models.Circle uiCircle = new Circle(new models.Point(310, 50), 30, Color.BLACK, false, currwidth.ordinal()+1, () -> {
+
+    });
     private void applyFillMode() {
         uiCircle.isFilled = fillMode;
         // 2 4 6 9
@@ -198,14 +195,14 @@ public class App {
             currwidth = Width.small;
             ui_shapes.get(ui_shapes.size()-3).SetSize(0.2f);
         }
-        ui_shapes.get(2).setWidth(currwidth.ordinal()+1);
-        ui_shapes.get(4).setWidth(currwidth.ordinal()+1);
-        ui_shapes.get(6).setWidth(currwidth.ordinal()+1);
-        ui_shapes.get(9).setWidth(currwidth.ordinal()+1);
-        uiCircle.setWidth(currwidth.ordinal()+1);
+        ui_shapes.get(2).SetWidth(currwidth.ordinal()+1);
+        ui_shapes.get(4).SetWidth(currwidth.ordinal()+1);
+        ui_shapes.get(6).SetWidth(currwidth.ordinal()+1);
+        ui_shapes.get(9).SetWidth(currwidth.ordinal()+1);
+        uiCircle.SetWidth(currwidth.ordinal()+1);
         Redraw();
     }
-    private models.Shape currentShape = null;
+    private models.Button currentShape = null;
     private void SetColor(Color c) {
         this.currentColor = c;
         ((models.Button)ui_shapes.get(ui_shapes.size()-4)).SetColor(this.currentColor);
@@ -219,7 +216,6 @@ public class App {
     public void clear(int color) {
         raster.setClearColor(color);
         finished_lines.clear();
-        finished_polygons.clear();
         finished_shapes.clear();
         finished_circles.clear();
         currentShape = null;
@@ -291,22 +287,24 @@ public class App {
         raster.clear();
         points.clear();
         for (Line l : finished_lines) {
-            rasterizer.rasterize(l);
+            l.pointsBorder.clear();
+            l.pointsBorder = rasterizer.rasterize(l);
             points.add(l.getPointA());
             points.add(l.getPointB());
         }
-        for (Polygon p : finished_polygons) {
-            for (Line l : p.GetLines()) {
-                rasterizer.rasterize(l);
-                points.add(l.getPointA());
-                points.add(l.getPointB());
-            }
-
-            rasterizer.rasterize(p);
-        }
-        for (models.Shape s : finished_shapes) {
+//        for (Polygon p : finished_polygons) {
+//            for (Line l : p.GetLines()) {
+//                rasterizer.rasterize(l);
+//                points.add(l.getPointA());
+//                points.add(l.getPointB());
+//            }
+//
+//            rasterizer.rasterize(p);
+//        }
+        for (models.Button s : finished_shapes) {
+            s.pointsBorder.clear();
             for (Line l : s.GetLines()) {
-                rasterizer.rasterize(l);
+                s.pointsBorder.addAll(rasterizer.rasterize(l));
                 points.add(l.getPointA());
                 points.add(l.getPointB());
             }
@@ -331,7 +329,8 @@ public class App {
             rasterizer.rasterize(currentShape);
         }
         for (Circle c : finished_circles) {
-            rasterizer.rasterize(c);
+            c.pointsBorder.clear();
+            c.pointsBorder = rasterizer.rasterize(c);
         }
         if (currentCircle != null) {
             rasterizer.rasterize(currentCircle);
@@ -374,7 +373,7 @@ public class App {
                     if (DrawMode == DrawType.Poly) {
                         if (currentPoly.GetPoints().size() > 2) {
                             currentPoly.Finish();
-                            finished_polygons.add(currentPoly);
+                            finished_shapes.add(currentPoly);
                             currentPoly = null;
                             Redraw();
                         }
@@ -396,12 +395,80 @@ public class App {
             }
         };
     }
-
+    private IChangeOrigin moveShape;
+    private Point origin = null;
+    private Point origin_mouse = null;
+    private boolean resizeMode = false;
+    private int original_size = 0;
+    private void MarkMovingObjectShape(int index) {
+        if (moveShape != null) return;
+        moveShape = finished_shapes.get(index);
+        origin = moveShape.GetOrigin();
+    }
+    private void MarkMovingObjectPolygon(int index) {
+        if (moveShape != null) return;
+        moveShape = finished_shapes.get(index);
+        origin = moveShape.GetOrigin();
+    }
+    private void MarkMovingObjectCircle(int index) {
+        if (moveShape != null) return;
+        moveShape = finished_circles.get(index);
+        origin = moveShape.GetOrigin();
+    }
     private void createAdapter() {
         mouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 models.Point p = new models.Point(e.getX(), e.getY());
+                if (DrawMode == DrawType.Edit) {
+                    // Go through all the thingies
+                    boolean fin = false;
+                    for (Circle c : finished_circles) {
+                        if (!fin) {
+                            if (c.getInsidePoints().contains(p)) {
+                                fin = true;
+                                c.onClick.OnClick();
+                                resizeMode = false;
+                            }
+                            if (c.pointsBorder.contains(p)) {
+                                c.onClick.OnClick();
+                                fin = true;
+                                resizeMode = true;
+                            }
+                        }
+                    }
+                    if (!fin) {
+                        for (Button c : finished_shapes) {
+                            if (!fin) {
+                                if (c.GetAllInsidePoints().contains(p)) {
+                                    fin = true;
+                                    c.onClick.OnClick();
+                                    resizeMode = false;
+                                }
+                                if (c.pointsBorder.contains(p)) {
+                                    c.onClick.OnClick();
+                                    fin = true;
+                                    resizeMode = true;
+                                }
+                            }
+                        }
+                        if (!fin) {
+                            for (Line l : finished_lines) {
+                                if (l.pointsBorder.contains(p)) {
+                                    fin = true;
+                                    resizeMode = false;
+                                    moveShape = l;
+                                    origin_mouse = p;
+                                    origin = l.origin;
+                                }
+                            }
+                        }
+                    }
+                    if (fin) {
+                        System.out.println("Setting mouse origin");
+                        origin_mouse = p;
+                    }
+                }
                 if (ui_shapes.getFirst().GetAllInsidePoints().contains(p)) {
                     return;
                 }
@@ -410,11 +477,17 @@ public class App {
                 }
                 if (DrawMode == DrawType.Circle) {
                     helperP1 = p;
-                    currentCircle = new models.Circle(p, 1, currentColor, fillMode, currwidth.ordinal()+1);
+                    int i = finished_circles.size();
+                    currentCircle = new models.Circle(p, 1, currentColor, fillMode, currwidth.ordinal()+1, () -> {
+                        MarkMovingObjectCircle(i);
+                    });
                 }
                 if (DrawMode == DrawType.Square) {
                     helperP1 = p;
-                    currentShape = new Shape(Bounding_boxes.SQUARE, currentColor, fillMode, 1, p, currwidth.ordinal()+1);
+                    int i = finished_shapes.size();
+                    currentShape = new Button(Bounding_boxes.SQUARE, currentColor, fillMode, 1, p, currwidth.ordinal()+1, () -> {
+                        MarkMovingObjectShape(i);
+                    });
                 }
 //                if (DrawMode == DrawType.Tri) {
 //                    System.out.println("Dragging tri begin");
@@ -460,7 +533,10 @@ public class App {
                     finished_lines.add(l);
                 }
                 if (DrawMode == DrawType.Poly) {
-                    if (currentPoly == null) currentPoly = new Polygon(currentColor, fillMode, currwidth.ordinal()+1);
+                    int i = finished_shapes.size();
+                    if (currentPoly == null) currentPoly = new Button(new ArrayList<>(),currentColor, fillMode, 1, new Point(0,0), currwidth.ordinal()+1, () -> {
+                        MarkMovingObjectPolygon(i);
+                    });
                     currentPoly.AddPoint(helperP2);
                 }
                 if (DrawMode == DrawType.Circle) {
@@ -475,6 +551,12 @@ public class App {
                     finished_shapes.add(currentShape);
                     currentShape = null;
                 }
+                if (DrawMode == DrawType.Edit && moveShape != null) {
+                    moveShape.calculateInsidePoints();
+                    moveShape = null;
+                    origin_mouse = null;
+                    origin = null;
+                }
                 Redraw();
                 helperP1 = null;
                 helperP2 = null;
@@ -487,6 +569,7 @@ public class App {
                     mousePos = new models.Point(e.getX(), e.getY());
                     Redraw();
                 }
+
             }
 
             @Override
@@ -515,10 +598,25 @@ public class App {
                 if (DrawMode == DrawType.Square) {
                     if (shiftMode) {
                         double dist = helperP1.distanceTo(helperP2);
-                        currentShape = new Shape(Bounding_boxes.SQUARE, currentColor, fillMode, 1, helperP1, currwidth.ordinal()+1);
+                        int i = finished_shapes.size();
+                        currentShape = new Button(Bounding_boxes.SQUARE, currentColor, fillMode, 1, helperP1, currwidth.ordinal()+1, () -> {
+                            MarkMovingObjectShape(i);
+                        });
                         currentShape.SetSize((float)dist);
                     } else {
-                        currentShape = new Shape(new ArrayList<>(List.of(helperP1, new Point(helperP1.getX(), helperP2.getY()), helperP2, new Point(helperP2.getX(), helperP1.getY()))), currentColor, fillMode, 1, new Point(0,0), currwidth.ordinal()+1);
+                        int i = finished_shapes.size();
+                        currentShape = new Button(new ArrayList<>(List.of(helperP1, new Point(helperP1.getX(), helperP2.getY()), helperP2, new Point(helperP2.getX(), helperP1.getY()))), currentColor, fillMode, 1, new Point(0,0), currwidth.ordinal()+1, () -> {
+                            MarkMovingObjectShape(i);
+                        });
+                    }
+                    Redraw();
+                }
+                if (DrawMode == DrawType.Edit && moveShape != null) {
+                    if (resizeMode) {
+                        moveShape.SetSize((int) Math.round(moveShape.GetOrigin().distanceTo(helperP2)));
+                    } else {
+                        Point pos = new models.Point(e.getX(), e.getY());
+                        moveShape.SetOrigin(origin.Add(origin_mouse.Sub(pos)));
                     }
                     Redraw();
                 }
