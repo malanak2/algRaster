@@ -40,6 +40,10 @@ public class Shape extends Polygon implements Cloneable, IChangeOrigin {
         }
         return transformedPoints;
     };
+
+    /**
+     * Calculates the lines for all points
+     */
     @Override
     protected void RebuildLines() {
         lines = new ArrayList<>();

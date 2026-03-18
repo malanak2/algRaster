@@ -103,6 +103,10 @@ public class Polygon implements IChangeOrigin {
     public ArrayList<models.Point> GetAllInsidePoints() {
         return insidePoints;
     }
+
+    /**
+     * Yeah found this online idk man, but it works!
+     */
     @Override
     public void calculateInsidePoints() {
         ArrayList<models.Point> points = this.GetPoints();

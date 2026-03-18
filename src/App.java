@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class App {
+    /**
+     * Determines what interacting with the applicataion does
+     */
     private enum DrawType {
         Normal,
         Poly,
@@ -25,6 +28,10 @@ public class App {
         Erase,
         Edit
     }
+
+    /**
+     * Determines the width of the lines drawn
+     */
     public enum Width {
         small,
         medium,
@@ -33,6 +40,9 @@ public class App {
     private final JPanel panel;
     private final Raster raster;
 
+    /**
+     * "Common" bounding boxes
+     */
     private static class Bounding_boxes {
         public static ArrayList<models.Point> BG = new ArrayList<>(List.of(
                 new Point(0, 0),
@@ -58,25 +68,73 @@ public class App {
     private MouseAdapter mouseAdapter;
     private KeyListener keyListener;
 
+    /**
+     * Helper point 1 - generally used when initiating an action
+     */
     private models.Point helperP1;
+    /**
+     * Helper point 2 - generally used for progress in an action and ending it
+     */
     private models.Point helperP2;
 
+    /**
+     * Finished lines to be drawn
+     */
     private final ArrayList<Line> finished_lines = new ArrayList<>();
+    /**
+     * Finished shapes minus circles to be drawn
+     */
     private final ArrayList<models.Button> finished_shapes = new ArrayList<>();
+    /**
+     * Finished circles to be drawn
+     */
     private final ArrayList<models.Circle> finished_circles = new ArrayList<>();
 
+    /**
+     * If the dotted mode is to be used
+     */
     private boolean dottedMode = false;
+    /**
+     * If shift mode is active - used for straight lines and square
+     */
     private boolean shiftMode = false;
+    /**
+     * DrawMode - holds the user interaction state of the application
+     */
     private DrawType DrawMode = DrawType.Normal;
+    /**
+     * Value used when drawing a new polygon
+     */
     private models.Button currentPoly = null;
+    /**
+     * Value used when drawing a new circel
+     */
     private models.Circle currentCircle = null;
+    /**
+     * Whether to fill in the shape
+     */
     private boolean fillMode = false;
+    /**
+     * Color to use when drawing shapes
+     */
     private Color currentColor = Color.RED;
+    /**
+     * Used for holding the mouse position when drawing new polygon
+     */
     private models.Point mousePos;
+    /**
+     * Holds the state of the lines to be drawn
+     */
     private Width currwidth = Width.medium;
+    // Old code
 //    private final models.Shape triangle = new models.Shape(new ArrayList(List.of(new models.Point(1,0), new Point(0, 1), new Point(1, 1))), new Color(255, 255, 255), true, 1, new models.Point(50,50));
-    private ArrayList<models.Point> points = new ArrayList<>();
+    /**
+     * Used to unhighlight the button when switching modes
+     */
     private int currentbtn = 0;
+    /**
+     * Holds the ui, when changing it needs to change a lot
+     */
     private final ArrayList<models.Shape> ui_shapes = new ArrayList<>(List.of(
             // BG
             new models.Shape(Bounding_boxes.BG, Color.GRAY, true, 1, new models.Point(0, 0), currwidth.ordinal()+1),
@@ -170,18 +228,29 @@ public class App {
             )), Color.BLACK, false, (float)1, new models.Point(0, 0), currwidth.ordinal()+1)
         )
     );
-
+    /**
+     * Since I made the circle a separate class :trollface:, it needs to be outside of ui_elements
+     */
     private models.Circle uiCircle = new Circle(new models.Point(310, 50), 30, Color.BLACK, false, currwidth.ordinal()+1, () -> {
 
     });
+
+    /**
+     * Visual of the fill mode
+     */
     private void applyFillMode() {
         uiCircle.isFilled = fillMode;
         // 2 4 6 9
         ui_shapes.get(2).isFilled = fillMode;
         ui_shapes.get(4).isFilled = fillMode;
-        ui_shapes.get(6).isFilled = fillMode;
+        // Now is mouse, no need for it to be filled in
+//        ui_shapes.get(6).isFilled = fillMode;
         ui_shapes.get(9).isFilled = fillMode;
     }
+
+    /**
+     * Again, ui stuff
+     */
     private void changeWidth() {
         if (currwidth == Width.small) {
             currwidth = Width.medium;
@@ -202,7 +271,16 @@ public class App {
         uiCircle.SetWidth(currwidth.ordinal()+1);
         Redraw();
     }
+
+    /**
+     * Used for holding the currently drawn shape
+     */
     private models.Button currentShape = null;
+
+    /**
+     * Changes the color including the ui
+     * @param c The color to change to
+     */
     private void SetColor(Color c) {
         this.currentColor = c;
         ((models.Button)ui_shapes.get(ui_shapes.size()-4)).SetColor(this.currentColor);
@@ -213,6 +291,10 @@ public class App {
         SwingUtilities.invokeLater(() -> new App(800, 600).start());
     }
 
+    /**
+     * On clear - resets the app essentially
+     * @param color Background color
+     */
     public void clear(int color) {
         raster.setClearColor(color);
         finished_lines.clear();
@@ -242,6 +324,9 @@ public class App {
         frame.setLayout(new BorderLayout());
 
         frame.setTitle("Delta : " + this.getClass().getName());
+        /*
+         * No.
+         */
         frame.setResizable(false);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -273,6 +358,10 @@ public class App {
 
         rasterizer = new TrivialRasterizer(raster, Color.CYAN, 2);
     }
+
+    /**
+     * Helper func to draw the ui
+     */
     private void DrawUI() {
         //bg
         for (models.Shape s : ui_shapes) {
@@ -283,15 +372,17 @@ public class App {
         }
         rasterizer.rasterize(uiCircle);
     }
+
+    /**
+     * Redraws the frame from scratch.
+     */
     private void Redraw() {
         raster.clear();
-        points.clear();
+        // Draw lines
         for (Line l : finished_lines) {
             if (l == null) continue;
             l.pointsBorder.clear();
             l.pointsBorder = rasterizer.rasterize(l);
-            points.add(l.getPointA());
-            points.add(l.getPointB());
         }
 //        for (Polygon p : finished_polygons) {
 //            for (Line l : p.GetLines()) {
@@ -302,16 +393,16 @@ public class App {
 //
 //            rasterizer.rasterize(p);
 //        }
+        // Draw shapes
         for (models.Button s : finished_shapes) {
             if (s == null) continue;
             s.pointsBorder.clear();
             for (Line l : s.GetLines()) {
                 s.pointsBorder.addAll(rasterizer.rasterize(l));
-                points.add(l.getPointA());
-                points.add(l.getPointB());
             }
             rasterizer.rasterize(s);
         }
+        // If there is a valid currPoly to display, do so
         if (currentPoly != null && currentPoly.GetLines() != null) {
             for (Line l : currentPoly.GetLines()) {
                 rasterizer.rasterize(l);
@@ -324,6 +415,7 @@ public class App {
                 rasterizer.rasterize(lB);
             }
         }
+        // Shape -//-
         if (currentShape != null) {
             for (Line l : currentShape.GetLines()) {
                 rasterizer.rasterize(l);
@@ -355,6 +447,7 @@ public class App {
                 if (e.isControlDown()) {
                    dottedMode = true;
                 }
+                // Old controls
 //                if (c == 'c') {
 //                    clear(Color.BLACK.getRGB());
 //                }
@@ -372,6 +465,7 @@ public class App {
 //                        DrawMode = DrawType.Tri;
 //                    }
 //                }
+                // confirm poly
                 if (e.getKeyCode() == 10) {
                     if (DrawMode == DrawType.Poly) {
                         if (currentPoly.GetPoints().size() > 2) {
@@ -398,21 +492,46 @@ public class App {
             }
         };
     }
+
+    /**
+     * The shape currently being moved
+     */
     private IChangeOrigin moveShape;
+    /**
+     * The original point of the shape = used for scaling, rotation
+     */
     private Point origin = null;
+    /**
+     * Used for calculating scale
+     */
     private Point origin_mouse = null;
+    /**
+     * Whether the user managed to hit the 1 pixel button
+     */
     private boolean resizeMode = false;
-    private int original_size = 0;
+
+    /**
+     * Used for a callback
+     * @param index The index
+     */
     private void MarkMovingObjectShape(int index) {
         if (moveShape != null) return;
         moveShape = finished_shapes.get(index);
         origin = moveShape.GetOrigin();
     }
+    /**
+     * Used for a callback
+     * @param index The index
+     */
     private void MarkMovingObjectPolygon(int index) {
         if (moveShape != null) return;
         moveShape = finished_shapes.get(index);
         origin = moveShape.GetOrigin();
     }
+    /**
+     * Used for a callback
+     * @param index The index
+     */
     private void MarkMovingObjectCircle(int index) {
         if (moveShape != null) return;
         moveShape = finished_circles.get(index);
@@ -423,6 +542,7 @@ public class App {
             @Override
             public void mousePressed(MouseEvent e) {
                 models.Point p = new models.Point(e.getX(), e.getY());
+                // handle edit and erase modes
                 if (DrawMode == DrawType.Edit || DrawMode == DrawType.Erase) {
                     // Go through all the thingies
                     boolean fin = false;
@@ -484,6 +604,9 @@ public class App {
                         origin_mouse = p;
                     }
                 }
+                /*
+                 * Do not progress in case of ui
+                 */
                 if (ui_shapes.getFirst().GetAllInsidePoints().contains(p)) {
                     return;
                 }
@@ -545,16 +668,39 @@ public class App {
                     return;
                 }
                 if (DrawMode == DrawType.Normal) {
-                    if (shiftMode) {
-                        if (Math.abs(helperP1.getX() - helperP2.getX()) < Math.abs(helperP1.getY() - helperP2.getY())) {
-                            helperP2.setX(helperP1.getX());
-                        } else {
-                            helperP2.setY(helperP1.getY());
+                    if (DrawMode == DrawType.Normal) {
+                        if (shiftMode) {
+                            int dx = helperP2.getX() - helperP1.getX();
+                            int dy = helperP2.getY() - helperP1.getY();
+                            int absDx = Math.abs(dx);
+                            int absDy = Math.abs(dy);
+
+                            // Calculate distances to the three possible snap states:
+                            // 1. Horizontal: distance to travel is absDy
+                            // 2. Vertical: distance to travel is absDx
+                            // 3. Diagonal: distance to travel is |absDx - absDy|
+
+                            int distToDiagonal = Math.abs(absDx - absDy);
+
+                            if (distToDiagonal < absDx && distToDiagonal < absDy) {
+                                // SNAP TO DIAGONAL: Force |dx| to equal |dy|
+                                // We use the larger of the two to determine the length
+                                int size = Math.max(absDx, absDy);
+                                helperP2.setX(helperP1.getX() + (int)Math.signum(dx) * size);
+                                helperP2.setY(helperP1.getY() + (int)Math.signum(dy) * size);
+                            } else if (absDx < absDy) {
+                                // SNAP TO VERTICAL
+                                helperP2.setX(helperP1.getX());
+                            } else {
+                                // SNAP TO HORIZONTAL
+                                helperP2.setY(helperP1.getY());
+                            }
                         }
+                        Line l = new Line(helperP1, helperP2, currentColor, dottedMode, currwidth.ordinal() + 1);
+                        finished_lines.add(l);
                     }
-                    Line l = new Line(helperP1, helperP2, currentColor, dottedMode, currwidth.ordinal()+1);
-                    finished_lines.add(l);
                 }
+
                 if (DrawMode == DrawType.Poly) {
                     int i = finished_shapes.size();
                     if (currentPoly == null) currentPoly = new Button(new ArrayList<>(),currentColor, fillMode, 1, new Point(0,0), currwidth.ordinal()+1, () -> {
@@ -606,17 +752,29 @@ public class App {
                     return;
                 }
                 if (DrawMode == DrawType.Normal) {
-                    Redraw();
-                    if (shiftMode) {
-                        if (Math.abs(helperP1.getX() - helperP2.getX()) < Math.abs(helperP1.getY() - helperP2.getY())) {
-                            helperP2.setX(helperP1.getX());
-                        } else {
-                            helperP2.setY(helperP1.getY());
+                        if (shiftMode) {
+                            int dx = helperP2.getX() - helperP1.getX();
+                            int dy = helperP2.getY() - helperP1.getY();
+                            int absDx = Math.abs(dx);
+                            int absDy = Math.abs(dy);
+
+                            int distToDiagonal = Math.abs(absDx - absDy);
+
+                            if (distToDiagonal < absDx && distToDiagonal < absDy) {
+                                int size = Math.max(absDx, absDy);
+                                helperP2.setX(helperP1.getX() + (int)Math.signum(dx) * size);
+                                helperP2.setY(helperP1.getY() + (int)Math.signum(dy) * size);
+                            } else if (absDx < absDy) {
+                                helperP2.setX(helperP1.getX());
+                            } else {
+                                helperP2.setY(helperP1.getY());
+                            }
                         }
-                    }
+                    Redraw();
                     rasterizer.rasterize(new Line(helperP1, helperP2, currentColor, dottedMode, currwidth.ordinal()+1));
                     panel.repaint();
                 }
+
                 if (DrawMode == DrawType.Circle) {
                     double dist = helperP1.distanceTo(helperP2) ;
                     currentCircle.setRadius((float)dist);
