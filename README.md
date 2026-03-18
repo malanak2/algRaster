@@ -12,11 +12,11 @@ Možnost vykreslování následujících objektů:
 - [x] Libovolný polygon
 
 ### 3. Úpravy tvarů
-- [ ] **Změna rozměrů:** Úprava velikosti a tvaru tažením myší.
+- [x] **Změna rozměrů:** Úprava velikosti a tvaru tažením myší.
 - [x] **Manipulace:** Přesouvání objektů po ploše plátna.
 
 ### 4. Další nástroje
-- [ ] **Guma:** Nástroj pro mazání obsahu.
+- [x] **Guma:** Nástroj pro mazání obsahu.
 - [x] **Výplň:** Možnost vyplnění uzavřených objektů a oblastí barvou.
 - [x] **Delete:** Vymazání celého plátna.
 

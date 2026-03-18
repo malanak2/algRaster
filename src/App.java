@@ -287,6 +287,7 @@ public class App {
         raster.clear();
         points.clear();
         for (Line l : finished_lines) {
+            if (l == null) continue;
             l.pointsBorder.clear();
             l.pointsBorder = rasterizer.rasterize(l);
             points.add(l.getPointA());
@@ -302,6 +303,7 @@ public class App {
 //            rasterizer.rasterize(p);
 //        }
         for (models.Button s : finished_shapes) {
+            if (s == null) continue;
             s.pointsBorder.clear();
             for (Line l : s.GetLines()) {
                 s.pointsBorder.addAll(rasterizer.rasterize(l));
@@ -329,6 +331,7 @@ public class App {
             rasterizer.rasterize(currentShape);
         }
         for (Circle c : finished_circles) {
+            if (c == null) continue;
             c.pointsBorder.clear();
             c.pointsBorder = rasterizer.rasterize(c);
         }
@@ -420,41 +423,54 @@ public class App {
             @Override
             public void mousePressed(MouseEvent e) {
                 models.Point p = new models.Point(e.getX(), e.getY());
-                if (DrawMode == DrawType.Edit) {
+                if (DrawMode == DrawType.Edit || DrawMode == DrawType.Erase) {
                     // Go through all the thingies
                     boolean fin = false;
                     for (Circle c : finished_circles) {
+                        if (c == null) continue;
                         if (!fin) {
                             if (c.getInsidePoints().contains(p)) {
                                 fin = true;
                                 c.onClick.OnClick();
                                 resizeMode = false;
                             }
-                            if (c.pointsBorder.contains(p)) {
-                                c.onClick.OnClick();
-                                fin = true;
-                                resizeMode = true;
+                            if (DrawMode == DrawType.Edit) {
+                                if (c.pointsBorder.contains(p)) {
+                                    c.onClick.OnClick();
+                                    fin = true;
+                                    resizeMode = true;
+                                    break;
+                                }
                             }
                         }
                     }
                     if (!fin) {
                         for (Button c : finished_shapes) {
+                            if (c == null) continue;
                             if (!fin) {
                                 if (c.GetAllInsidePoints().contains(p)) {
                                     fin = true;
                                     c.onClick.OnClick();
                                     resizeMode = false;
                                 }
-                                if (c.pointsBorder.contains(p)) {
-                                    c.onClick.OnClick();
-                                    fin = true;
-                                    resizeMode = true;
+                                if (DrawMode == DrawType.Edit) {
+                                    if (c.pointsBorder.contains(p)) {
+                                        c.onClick.OnClick();
+                                        fin = true;
+                                        resizeMode = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
                         if (!fin) {
                             for (Line l : finished_lines) {
+                                if (l == null) continue;
                                 if (l.pointsBorder.contains(p)) {
+                                    if (DrawMode == DrawType.Erase) {
+                                        finished_lines.set(finished_lines.indexOf(l), null);
+                                        break;
+                                    }
                                     fin = true;
                                     resizeMode = false;
                                     moveShape = l;
@@ -464,8 +480,7 @@ public class App {
                             }
                         }
                     }
-                    if (fin) {
-                        System.out.println("Setting mouse origin");
+                    if (fin && DrawMode != DrawType.Erase) {
                         origin_mouse = p;
                     }
                 }
@@ -479,14 +494,22 @@ public class App {
                     helperP1 = p;
                     int i = finished_circles.size();
                     currentCircle = new models.Circle(p, 1, currentColor, fillMode, currwidth.ordinal()+1, () -> {
-                        MarkMovingObjectCircle(i);
+                        if (DrawMode == DrawType.Erase) {
+                            finished_circles.set(i, null);
+                        } else {
+                            MarkMovingObjectCircle(i);
+                        }
                     });
                 }
                 if (DrawMode == DrawType.Square) {
                     helperP1 = p;
                     int i = finished_shapes.size();
                     currentShape = new Button(Bounding_boxes.SQUARE, currentColor, fillMode, 1, p, currwidth.ordinal()+1, () -> {
-                        MarkMovingObjectShape(i);
+                        if (DrawMode == DrawType.Erase) {
+                            finished_shapes.set(i, null);
+                        } else {
+                            MarkMovingObjectPolygon(i);
+                        }
                     });
                 }
 //                if (DrawMode == DrawType.Tri) {
@@ -535,7 +558,11 @@ public class App {
                 if (DrawMode == DrawType.Poly) {
                     int i = finished_shapes.size();
                     if (currentPoly == null) currentPoly = new Button(new ArrayList<>(),currentColor, fillMode, 1, new Point(0,0), currwidth.ordinal()+1, () -> {
-                        MarkMovingObjectPolygon(i);
+                        if (DrawMode == DrawType.Erase) {
+                            finished_shapes.set(i, null);
+                        } else {
+                            MarkMovingObjectPolygon(i);
+                        }
                     });
                     currentPoly.AddPoint(helperP2);
                 }
@@ -600,13 +627,21 @@ public class App {
                         double dist = helperP1.distanceTo(helperP2);
                         int i = finished_shapes.size();
                         currentShape = new Button(Bounding_boxes.SQUARE, currentColor, fillMode, 1, helperP1, currwidth.ordinal()+1, () -> {
-                            MarkMovingObjectShape(i);
+                            if (DrawMode == DrawType.Erase) {
+                                finished_shapes.set(i, null);
+                            } else {
+                                MarkMovingObjectShape(i);
+                            }
                         });
                         currentShape.SetSize((float)dist);
                     } else {
                         int i = finished_shapes.size();
                         currentShape = new Button(new ArrayList<>(List.of(helperP1, new Point(helperP1.getX(), helperP2.getY()), helperP2, new Point(helperP2.getX(), helperP1.getY()))), currentColor, fillMode, 1, new Point(0,0), currwidth.ordinal()+1, () -> {
-                            MarkMovingObjectShape(i);
+                            if (DrawMode == DrawType.Erase) {
+                                finished_shapes.set(i, null);
+                            } else {
+                                MarkMovingObjectShape(i);
+                            }
                         });
                     }
                     Redraw();
